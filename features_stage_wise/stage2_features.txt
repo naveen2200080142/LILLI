@@ -1,0 +1,9 @@
+now we enter into stage 2 feaature  implimentation
+here are the features :
+1. rag and vector database need to  continues learning with user asked questions and llm genarated responses
+2. we need a unique ai halograme for our project in the center of interface. it activats when user gives prompt or try to give voice commands.
+3.user can give our product a custum name like lilli or ram etc .. at the beggining. i used to call it as jarvis like everyone have there own name to there assistent.
+
+
+
+

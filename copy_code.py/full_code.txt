@@ -1,0 +1,243 @@
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:async';
+
+void main() => runApp(LilliApp());
+
+class LilliApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'LILLI',
+      theme: ThemeData.dark().copyWith(scaffoldBackgroundColor: Colors.black),
+      home: HoloChatScreen(),
+    );
+  }
+}
+
+class HoloChatScreen extends StatefulWidget {
+  @override
+  _HoloChatScreenState createState() => _HoloChatScreenState();
+}
+
+class _HoloChatScreenState extends State<HoloChatScreen> with SingleTickerProviderStateMixin {
+  final TextEditingController _controller = TextEditingController();
+  String latestResponse = "Greetings! I’m LILLI, your holographic assistant.";
+  late AnimationController _holoController;
+  bool isActive = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _holoController = AnimationController(
+      vsync: this,
+      duration: Duration(seconds: 2),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _holoController.dispose();
+    super.dispose();
+  }
+
+  Future<void> sendMessage(String text) async {
+    setState(() => isActive = true);
+    final response = await http.post(
+      Uri.parse('http://127.0.0.1:5000/api/message'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'message': text}),
+    );
+    final data = jsonDecode(response.body);
+    setState(() {
+      latestResponse = data['response'];
+      isActive = false;
+    });
+    _controller.clear();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Stack(
+        children: [
+          // Background gradient
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Colors.black, Colors.grey.shade900],
+              ),
+            ),
+          ),
+          // Hologram at center
+          Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedBuilder(
+                  animation: _holoController,
+                  builder: (context, child) {
+                    return Container(
+                      width: 200,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            Colors.yellow.withOpacity(0.8 * _holoController.value),
+                            Colors.amber.withOpacity(0.4),
+                            Colors.transparent,
+                          ],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.yellow.withOpacity(0.5),
+                            blurRadius: 30,
+                            spreadRadius: 10,
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Icon(Icons.assistant, size: 80, color: Colors.amberAccent),
+                      ),
+                    );
+                  },
+                ),
+                SizedBox(height: 20),
+                Text(
+                  latestResponse,
+                  style: TextStyle(
+                    color: Colors.yellowAccent,
+                    fontSize: 18,
+                    shadows: [Shadow(color: Colors.amberAccent, blurRadius: 10)],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          // Input panel at bottom
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _controller,
+                      decoration: InputDecoration(
+                        hintText: 'Speak or type...',
+                        hintStyle: TextStyle(color: Colors.yellowAccent.withOpacity(0.7)),
+                        filled: true,
+                        fillColor: Colors.black.withOpacity(0.5),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(25),
+                          borderSide: BorderSide(color: Colors.yellow),
+                        ),
+                      ),
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                  SizedBox(width: 10),
+                  FloatingActionButton(
+                    onPressed: () => sendMessage(_controller.text),
+                    child: Icon(Icons.send),
+                    backgroundColor: Colors.yellow,
+                    foregroundColor: Colors.black,
+                  ),
+                  SizedBox(width: 10),
+                  FloatingActionButton(
+                    onPressed: () => sendMessage("Listen"), // Placeholder for voice
+                    child: Icon(Icons.mic),
+                    backgroundColor: Colors.yellow,
+                    foregroundColor: Colors.black,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
+
+
+from flask import Flask, request, jsonify
+import speech_recognition as sr
+import pyttsx3
+import google.generativeai as genai
+import os
+import sqlite3
+from threading import Thread
+
+app = Flask(__name__)
+
+# Google Gemini API setup
+genai.configure(api_key=os.environ["API_KEY"])
+recognizer = sr.Recognizer()
+tts_engine = pyttsx3.init()
+
+# SQLite setup
+conn = sqlite3.connect('chat_history.db', check_same_thread=False)
+cursor = conn.cursor()
+cursor.execute('''CREATE TABLE IF NOT EXISTS chats 
+                  (id INTEGER PRIMARY KEY, user_input TEXT, assistant_response TEXT)''')
+conn.commit()
+
+def save_to_db(user_input, response):
+    cursor.execute("INSERT INTO chats (user_input, assistant_response) VALUES (?, ?)", 
+                   (user_input, response))
+    conn.commit()
+
+@app.route('/api/message', methods=['POST'])
+def handle_message():
+    data = request.json
+    user_input = data.get('message', '')
+    if not user_input:
+        return jsonify({'response': 'No input provided.'}), 400
+    
+    # Get AI response
+    model = genai.GenerativeModel(
+        model_name="gemini-1.5-flash",
+        generation_config={"temperature": 0.9, "top_p": 0.95, "max_output_tokens": 200}
+    )
+    prompt = f"{user_input} give me a 20 to 30 word response"
+    response = model.generate_content(prompt).text if model.generate_content(prompt) else "Error generating response."
+    
+    # Save to DB and speak asynchronously
+    save_to_db(user_input, response)
+    Thread(target=tts_engine.say, args=(response,)).start()
+    tts_engine.runAndWait()
+    
+    return jsonify({'response': response})
+
+@app.route('/api/voice', methods=['POST'])
+def handle_voice():
+    with sr.Microphone() as source:
+        recognizer.adjust_for_ambient_noise(source)
+        audio = recognizer.listen(source)
+    try:
+        text = recognizer.recognize_google(audio)
+        model = genai.GenerativeModel(
+            model_name="gemini-1.5-flash",
+            generation_config={"temperature": 0.9, "top_p": 0.95, "max_output_tokens": 200}
+        )
+        prompt = f"{text} give me a 20 to 30 word response"
+        response = model.generate_content(prompt).text
+        save_to_db(text, response)
+        Thread(target=tts_engine.say, args=(response,)).start()
+        tts_engine.runAndWait()
+        return jsonify({'response': response})
+    except sr.UnknownValueError:
+        return jsonify({'response': "Sorry, I didn't catch that."}), 400
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)
+    

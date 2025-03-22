@@ -1,0 +1,73 @@
+Project Overview: JARVIS AI Assistant
+1. Project Description
+Name: JARVIS AI Assistant (inspired by Tony Stark’s companion in Iron Man).
+Purpose: A desktop-based, privacy-focused AI assistant that helps users with tasks through text, voice, and file-based interactions, improving over time via user data.
+Platform: Cross-platform desktop application built with Flutter (frontend) and Python (backend).
+Current Status: Basic functionality is working—accepts text/audio input, generates voice responses, and displays some UI feedback.
+2. Current Features (What’s Working)
+Input Methods:
+Text input via a Flutter text field.
+Voice input using Python’s speech_recognition library (currently Google API, but planned for offline transition).
+Output:
+Voice responses via pyttsx3 with a male voice (David).
+Text responses displayed in a Flutter UI chat box (though with some buffering/UI update issues).
+Backend:
+Flask server running on http://127.0.0.1:5000 handling API requests (/api/message, /api/voice).
+Integration with Google’s Gemini AI (gemini-1.5-flash) for response generation.
+Storage:
+Initially SQLite for chat history, recently shifted to JSON (chat_history.json) to store prompts and responses.
+UI:
+Dark-themed Flutter interface with a holographic animation (basic pulsing circle with an icon).
+Chat history display (though not fully consistent yet).
+3. Stage 1 Goals (Recently Implemented)
+RAG Model: A basic Retrieval-Augmented Generation system where recent interactions and file contents are appended to a context string for Gemini.
+Hologram Design: A pulsating hologram appears during response generation (partially working, needs refinement).
+JSON Storage: Messages stored in a JSON file; last 10 interactions retrievable (endpoint added but UI integration needs testing).
+File Input: TXT file uploads supported in Flutter, with content sent to the backend to update RAG context.
+4. Future Vision (Local RAG Architecture)
+Core Idea: Transition to a fully local RAG model with a vector database for privacy and continuous learning.
+Key Features:
+Local Processing: All data (prompts, responses, files) stays on the user’s device.
+Vector Database: Stores embeddings of user inputs, responses, and file contents (e.g., using FAISS).
+Continuous Training: Updates the vector database with each interaction; optionally fine-tunes a local language model.
+Inputs: Text, audio (offline speech recognition), and attached files (e.g., TXT) to train the RAG.
+Privacy: No cloud dependency, protecting user data.
+Goal: A personalized assistant that learns the user’s style and context (e.g., question phrasing, file content) over time.
+5. Technical Architecture
+Frontend:
+Framework: Flutter for a sleek, cross-platform UI.
+Components: Text field, mic button, file picker, chat display, and animated hologram.
+Backend:
+Framework: Python with Flask for API handling.
+Current LLM: Gemini AI (cloud-based, to be replaced with a local model).
+RAG: Basic context string (planned upgrade to vector database with embeddings).
+Storage: JSON file (planned transition to FAISS or similar).
+Speech: speech_recognition (Google API now, offline Sphinx later) and pyttsx3 for TTS.
+Future Local Stack:
+Embedding Model: SentenceTransformers (e.g., all-MiniLM-L6-v2).
+Vector DB: FAISS for fast, local similarity search.
+LLM: Small, fine-tunable model (e.g., TinyLLaMA, DistilBERT).
+6. Progress and Challenges
+What Works:
+Basic input/output loop (text/audio in, voice/text out).
+JSON storage and retrieval.
+Initial RAG context from user data.
+Current Issues:
+UI buffering: Chat display sometimes lags or doesn’t update fully.
+Next-query readiness: App occasionally freezes after a response.
+Cloud dependency: Gemini API limits privacy and offline use.
+Next Steps:
+Fix UI responsiveness (ensure setState updates correctly).
+Transition to a local RAG with vector database and offline LLM.
+Test file-based training and continuous learning.
+7. Benefits
+Personalization: Learns user habits and file contexts over time.
+Privacy: Local storage and processing keep data secure.
+Sci-Fi Aesthetic: Hologram UI enhances the JARVIS experience.
+8. Risks and Considerations
+Performance: Local models may be slower or less accurate than cloud LLMs.
+Resources: Continuous training and vector storage need sufficient CPU/RAM/disk space.
+Setup: Dependencies and model weights might complicate deployment for non-technical users.
+Scalability: Vector database could grow large without pruning.
+Summary
+Your project is a desktop AI assistant named JARVIS, currently at a functional prototype stage with text/audio input, voice output, and a basic UI. It uses Flutter and Python, with Gemini AI powering responses and JSON storing history. You’ve implemented Stage 1 features like RAG and file uploads, but UI bugs remain. The future vision is a fully local, privacy-focused RAG system with a vector database that trains continuously on user data—prompts, responses, and files—offering a personalized, offline experience.

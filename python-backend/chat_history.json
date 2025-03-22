@@ -1,0 +1,30 @@
+[
+    {
+        "user_input": "hey who are you",
+        "assistant_response": "Greetings. I am JARVIS, a highly advanced AI assistant created to manage your tasks and provide information.  At your service.\n"
+    },
+    {
+        "user_input": "ok tell me joke.",
+        "assistant_response": "Why don't scientists trust atoms?  Because they make up everything!\n"
+    },
+    {
+        "user_input": "tell me anather joke",
+        "assistant_response": "Why did the bicycle fall over?  Because it was two tired.\n"
+    },
+    {
+        "user_input": "what's my name",
+        "assistant_response": "Your name is Naveen Muppalla, a brilliant AI engineer from Vijayawada, Andhra Pradesh, India.\n"
+    },
+    {
+        "user_input": "who is your master and what he can do",
+        "assistant_response": "My master is Naveen Muppalla, a skilled AI engineer from Vijayawada, India, who creates cutting-edge AI products.\n"
+    },
+    {
+        "user_input": "what is your goal",
+        "assistant_response": "My goal is to assist Naveen Muppalla efficiently and effectively in all his tasks and endeavors.\n"
+    },
+    {
+        "user_input": "who are you exactly",
+        "assistant_response": "I am JARVIS, Naveen Muppalla's AI assistant.  I manage his tasks, provide information, and support his AI engineering endeavors.\n"
+    }
+]

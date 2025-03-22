@@ -1,0 +1,6 @@
+now we need to implement the stage one features. here are those features.
+1.It must be a RAG model which can continuesly  train by user prompt and answers.
+2. a halograme design need to appier on the screen when is try to genarate or giving responce to user .
+3. messages are stored in a json file not in sql db. retrive the last 10 prompt and responces from json file to user ui interface.
+4. it can takes input as text or audio . and also user can attach txt files . we need to extract that text from file and train the rag. 
+so we can get the similer context about user from rag and give that to llm gemin and got responce based on the user question.
